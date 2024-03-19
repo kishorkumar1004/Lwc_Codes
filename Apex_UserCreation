@@ -1,0 +1,139 @@
+/*
+****************************************************************************
+Apex Class Name    : UserController
+Created Date       : 23-February-2024
+@description       : Class to create user and assign roles, profiles.
+@author            : kishorkumar P
+Modification Log:
+Version    Date               Author             Modification
+1.0        23-02-2024       Kishorkumar P    Initial Version
+*****************************************************************************
+*/
+
+
+public with sharing class UserController {
+     /**
+     * @description Retrieves a list of profiles available in the Salesforce org.
+     * @return List<ProfileWrapper> A list of ProfileWrapper objects containing profile Ids and Names.
+     */
+
+    @AuraEnabled(cacheable=true)
+    public static List<ProfileWrapper> getProfileOptions() {
+        List<ProfileWrapper> profiles = new List<ProfileWrapper>();
+        for(Profile prof : [SELECT Id, Name FROM Profile]) {
+            profiles.add(new ProfileWrapper(prof.Id, prof.Name));
+        }
+        return profiles;
+    }
+    
+     /**
+     * @description Retrieves a list of user roles based on metadata settings.
+     * @return List<RoleWrapper> A list of RoleWrapper objects containing role Ids and Names.
+     */
+    
+     @AuraEnabled(cacheable=true)
+    public static List<RoleWrapper> getRoleOptions() {
+    List<RoleWrapper> roles = new List<RoleWrapper>();
+
+        ProfileAndRole__mdt settings = ProfileAndRole__mdt.getInstance('ProfileRoleValues');
+        //System.debug('meta data'+settings);
+       String regionalManager = settings.RegionalManager__c;
+        String AsstRegionalManager = settings.Asst_Regional_Manager__c;
+        String JuniorRegionalManager = settings.Junior_Regional_Manager__c;
+        String DirectorIndPlacements = settings.Director_Industry_Placements__c;
+        //String ProfileApplicationAdmin =settings.Profile_I_P_Application_Admin__c;
+        //String ProfileRegionalManager = settings.Profile_Director_Industry_Placements__c;
+
+
+    Set<String> roleSet = new Set<String>{regionalManager, JuniorRegionalManager, AsstRegionalManager, DirectorIndPlacements};
+ 
+    for(UserRole role : [SELECT Id, Name, DeveloperName FROM UserRole Where DeveloperName IN: roleSet ]) {
+        roles.add(new RoleWrapper(role.Id, role.Name));
+    }
+    return roles;
+}
+ 
+      /**
+     * @description Creates a new user with the specified details.
+     * @param firstName The first name of the user.
+     * @param lastName The last name of the user.
+     * @param alias The user's alias.
+     * @param username The username for the user.
+     * @param email The email address of the user.
+     * @param roleId The Id of the role to assign to the user.
+     */
+    
+    @AuraEnabled
+    public static void createUser(String firstName, String lastName, String alias, String username, String email, String roleId) {
+
+         ProfileAndRole__mdt settings = ProfileAndRole__mdt.getInstance('ProfileRoleValues');
+        
+        String regionalManager = settings.RegionalManager__c;
+        String AsstRegionalManager = settings.Asst_Regional_Manager__c;
+        String JuniorRegionalManager = settings.Junior_Regional_Manager__c;
+        String DirectorIndPlacements = settings.Director_Industry_Placements__c;
+        String ProfileApplicationAdmin =settings.Profile_I_P_Application_Admin__c;
+        String ProfileRegionalManager = settings.Profile_Director_Industry_Placements__c;
+        //String profileId, profileName;
+        
+        String profileId;
+        String profileName;
+        
+        UserRole usrRole = [SELECT Id, Name, DeveloperName FROM UserRole Where Id =: roleId LIMIT 1];
+        if(usrRole.DeveloperName ==  regionalManager || usrRole.DeveloperName == JuniorRegionalManager || usrRole.DeveloperName == AsstRegionalManager){
+           profileName = ProfileRegionalManager;
+        } else if(usrRole.DeveloperName == DirectorIndPlacements){
+            profileName = ProfileApplicationAdmin;
+        }
+ 
+		System.debug('profileName = ' + profileName);
+        Profile prof = [select id, Name from Profile where Name =: profileName LIMIT 1];
+        
+        System.debug('Profile id = '+prof.Id);
+        User newUser = new User(
+            FirstName = firstName,
+            LastName = lastName,
+            Alias =  firstName.left(4) + lastName.left(1),
+            Username = username,
+            Email = email,
+            ProfileId = prof.Id,
+            UserRoleId= roleId,
+            TimeZoneSidKey = 'America/Los_Angeles',
+            LocaleSidKey = 'en_US',
+            EmailEncodingKey = 'UTF-8',
+            LanguageLocaleKey = 'en_US'
+        );
+        insert newUser;
+    }
+ 
+     /**
+     * @description Wrapper class to hold Profile information.
+     */
+    
+    public class ProfileWrapper {
+        @AuraEnabled
+        public String profileId { get; set; }
+        @AuraEnabled
+        public String profileName { get; set; }
+ 
+        public ProfileWrapper(String profileId, String profileName) {
+            this.profileId = profileId;
+            this.profileName = profileName;
+        }
+    }
+      /**
+     * @description Wrapper class to hold Role information.
+     */
+    
+    public class RoleWrapper {
+    @AuraEnabled
+    public String roleId { get; set; }
+    @AuraEnabled
+    public String roleName { get; set; }
+ 
+    public RoleWrapper(String roleId, String roleName) {
+        this.roleId = roleId;
+        this.roleName = roleName;
+    }
+}
+}
