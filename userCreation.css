@@ -1,0 +1,37 @@
+.container {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    padding: 25px;
+}
+
+.box {
+    flex: 1 1 45%;
+    margin-bottom: 20px;
+}
+
+.box:nth-child(odd) {
+    margin-right: 20px;
+}
+
+.button {
+    margin-top: 50px;
+}
+.custom-button {
+    background-color: #247ac5;
+    color: white;
+    padding: 6px 40px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 14px;
+    margin-top: 22px;
+    cursor: pointer;
+    border-radius: 4px;
+    border: none;
+}
+
+.custom-button:hover {
+    background-color: #25597b;
+}
+

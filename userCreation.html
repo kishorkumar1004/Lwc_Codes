@@ -1,0 +1,22 @@
+<template>
+    <lightning-card title="Create User">
+        <div class="container">
+            <div class="box">
+                <lightning-input label="First Name" value={firstName} required onchange={handleInputChange}
+                    name="firstName"></lightning-input>
+                <lightning-input label="Last Name" value={lastName} required onchange={handleInputChange}
+                    name="lastName"></lightning-input>
+                <lightning-input label="Username" value={username} required onchange={handleInputChange} name="username"
+                    placeholder=" Username@gmail.com"></lightning-input>
+            </div>
+            <div class="box">
+                <lightning-input label="Email" type="email" required value={email} onchange={handleInputChange}
+                    name="email"></lightning-input>
+                <lightning-combobox label="Role" required value={roleId} options={roleOptions}
+                    onchange={handleRoleChange}></lightning-combobox>
+                <button class="custom-button" onclick={handleSubmit}> Submit </button>
+            </div>      
+        </div>
+
+    </lightning-card>
+</template>
